@@ -1,5 +1,5 @@
 /**
- * QUnit - A JavaScript Unit Testing Framework
+ * QUnit v1.2.0 - A JavaScript Unit Testing Framework
  *
  * http://docs.jquery.com/QUnit
  *
@@ -21,7 +21,9 @@ var defined = {
 	})()
 };
 
-var testId = 0;
+var	testId = 0,
+	toString = Object.prototype.toString,
+	hasOwn = Object.prototype.hasOwnProperty;
 
 var Test = function(name, testName, expected, testEnvironmentArg, async, callback) {
 	this.name = name;
@@ -72,8 +74,9 @@ Test.prototype = {
 		}
 
 		runLoggingCallbacks( 'testStart', QUnit, {
-			name: this.testName
-		} );
+			name: this.testName,
+			module: this.module
+		});
 
 		// allow utility functions to access the current test environment
 		// TODO why??
@@ -90,6 +93,7 @@ Test.prototype = {
 		}
 	},
 	run: function() {
+		config.current = this;
 		if ( this.async ) {
 			QUnit.stop();
 		}
@@ -108,11 +112,12 @@ Test.prototype = {
 
 			// Restart the tests if they're blocking
 			if ( config.blocking ) {
-				start();
+				QUnit.start();
 			}
 		}
 	},
 	teardown: function() {
+		config.current = this;
 		try {
 			this.testEnvironment.teardown.call(this.testEnvironment);
 			checkPollution();
@@ -121,7 +126,8 @@ Test.prototype = {
 		}
 	},
 	finish: function() {
-		if ( this.expected && this.expected != this.assertions.length ) {
+		config.current = this;
+		if ( this.expected != null && this.expected != this.assertions.length ) {
 			QUnit.ok( false, "Expected " + this.expected + " assertions, but " + this.assertions.length + " were run" );
 		}
 
@@ -212,6 +218,7 @@ Test.prototype = {
 
 		runLoggingCallbacks( 'testDone', QUnit, {
 			name: this.testName,
+			module: this.module,
 			failed: bad,
 			passed: this.assertions.length - bad,
 			total: this.assertions.length
@@ -243,7 +250,7 @@ Test.prototype = {
 		if (bad) {
 			run();
 		} else {
-			synchronize(run);
+			synchronize(run, true);
 		};
 	}
 
@@ -260,7 +267,7 @@ var QUnit = {
 	asyncTest: function(testName, expected, callback) {
 		if ( arguments.length === 2 ) {
 			callback = expected;
-			expected = 0;
+			expected = null;
 		}
 
 		QUnit.test(testName, expected, callback, true);
@@ -310,7 +317,7 @@ var QUnit = {
 			result: a,
 			message: msg
 		};
-		msg = escapeHtml(msg);
+		msg = escapeInnerText(msg);
 		runLoggingCallbacks( 'log', QUnit, details );
 		config.current.assertions.push({
 			result: a,
@@ -387,8 +394,8 @@ var QUnit = {
 		QUnit.ok(ok, message);
 	},
 
-	start: function() {
-		config.semaphore--;
+	start: function(count) {
+		config.semaphore -= count || 1;
 		if (config.semaphore > 0) {
 			// don't start until equal number of stop-calls
 			return;
@@ -408,24 +415,25 @@ var QUnit = {
 				}
 
 				config.blocking = false;
-				process();
+				process(true);
 			}, 13);
 		} else {
 			config.blocking = false;
-			process();
+			process(true);
 		}
 	},
 
-	stop: function(timeout) {
-		config.semaphore++;
+	stop: function(count) {
+		config.semaphore += count || 1;
 		config.blocking = true;
 
-		if ( timeout && defined.setTimeout ) {
+		if ( config.testTimeout && defined.setTimeout ) {
 			clearTimeout(config.timeout);
 			config.timeout = window.setTimeout(function() {
 				QUnit.ok( false, "Test timed out" );
+				config.semaphore = 1;
 				QUnit.start();
-			}, timeout);
+			}, config.testTimeout);
 		}
 	}
 };
@@ -604,8 +612,7 @@ extend(QUnit, {
 				return "null";
 		}
 
-		var type = Object.prototype.toString.call( obj )
-			.match(/^\[object\s(.*)\]$/)[1] || '';
+		var type = toString.call( obj ).match(/^\[object\s(.*)\]$/)[1] || '';
 
 		switch (type) {
 				case 'Number':
@@ -636,10 +643,10 @@ extend(QUnit, {
 			expected: expected
 		};
 
-		message = escapeHtml(message) || (result ? "okay" : "failed");
+		message = escapeInnerText(message) || (result ? "okay" : "failed");
 		message = '<span class="test-message">' + message + "</span>";
-		expected = escapeHtml(QUnit.jsDump.parse(expected));
-		actual = escapeHtml(QUnit.jsDump.parse(actual));
+		expected = escapeInnerText(QUnit.jsDump.parse(expected));
+		actual = escapeInnerText(QUnit.jsDump.parse(actual));
 		var output = message + '<table><tr class="test-expected"><th>Expected: </th><td><pre>' + expected + '</pre></td></tr>';
 		if (actual != expected) {
 			output += '<tr class="test-actual"><th>Result: </th><td><pre>' + actual + '</pre></td></tr>';
@@ -649,7 +656,7 @@ extend(QUnit, {
 			var source = sourceFromStacktrace();
 			if (source) {
 				details.source = source;
-				output += '<tr class="test-source"><th>Source: </th><td><pre>' + escapeHtml(source) + '</pre></td></tr>';
+				output += '<tr class="test-source"><th>Source: </th><td><pre>' + escapeInnerText(source) + '</pre></td></tr>';
 			}
 		}
 		output += "</table>";
@@ -667,6 +674,9 @@ extend(QUnit, {
 		var querystring = "?",
 			key;
 		for ( key in params ) {
+			if ( !hasOwn.call( params, key ) ) {
+				continue;
+			}
 			querystring += encodeURIComponent( key ) + "=" +
 				encodeURIComponent( params[ key ] ) + "&";
 		}
@@ -675,7 +685,7 @@ extend(QUnit, {
 
 	extend: extend,
 	id: id,
-	addEvent: addEvent,
+	addEvent: addEvent
 });
 
 //QUnit.constructor is set to the empty F() above so that we can add to it's prototype later
@@ -696,7 +706,7 @@ extend(QUnit.constructor.prototype, {
 	// moduleStart: { name }
 	moduleStart: registerLoggingCallback('moduleStart'),
 	// moduleDone: { name, failed, passed, total }
-	moduleDone: registerLoggingCallback('moduleDone'),
+	moduleDone: registerLoggingCallback('moduleDone')
 });
 
 if ( typeof document === "undefined" || document.readyState === "complete" ) {
@@ -778,6 +788,17 @@ QUnit.load = function() {
 };
 
 addEvent(window, "load", QUnit.load);
+
+// addEvent(window, "error") gives us a useless event object
+window.onerror = function( message, file, line ) {
+	if ( QUnit.config.current ) {
+		ok( false, message + ", " + file + ":" + line );
+	} else {
+		test( "global failure", function() {
+			ok( false, message + ", " + file + ":" + line );
+		});
+	}
+};
 
 function done() {
 	config.autorun = true;
@@ -878,16 +899,14 @@ function sourceFromStacktrace() {
 	}
 }
 
-function escapeHtml(s) {
+function escapeInnerText(s) {
 	if (!s) {
 		return "";
 	}
 	s = s + "";
-	return s.replace(/[\&"<>\\]/g, function(s) {
+	return s.replace(/[\&<>]/g, function(s) {
 		switch(s) {
 			case "&": return "&amp;";
-			case "\\": return "\\\\";
-			case '"': return '\"';
 			case "<": return "&lt;";
 			case ">": return "&gt;";
 			default: return s;
@@ -895,26 +914,30 @@ function escapeHtml(s) {
 	});
 }
 
-function synchronize( callback ) {
+function synchronize( callback, last ) {
 	config.queue.push( callback );
 
 	if ( config.autorun && !config.blocking ) {
-		process();
+		process(last);
 	}
 }
 
-function process() {
-	var start = (new Date()).getTime();
+function process( last ) {
+	var start = new Date().getTime();
+	config.depth = config.depth ? config.depth + 1 : 1;
 
 	while ( config.queue.length && !config.blocking ) {
-		if ( config.updateRate <= 0 || (((new Date()).getTime() - start) < config.updateRate) ) {
+		if ( !defined.setTimeout || config.updateRate <= 0 || ( ( new Date().getTime() - start ) < config.updateRate ) ) {
 			config.queue.shift()();
 		} else {
-			window.setTimeout( process, 13 );
+			window.setTimeout( function(){
+				process( last );
+			}, 13 );
 			break;
 		}
 	}
-	if (!config.blocking && !config.queue.length) {
+	config.depth--;
+	if ( last && !config.blocking && !config.queue.length && config.depth === 0 ) {
 		done();
 	}
 }
@@ -924,6 +947,9 @@ function saveGlobal() {
 
 	if ( config.noglobals ) {
 		for ( var key in window ) {
+			if ( !hasOwn.call( window, key ) ) {
+				continue;
+			}
 			config.pollution.push( key );
 		}
 	}
@@ -974,7 +1000,9 @@ function extend(a, b) {
 	for ( var prop in b ) {
 		if ( b[prop] === undefined ) {
 			delete a[prop];
-		} else {
+
+		// Avoid "Member not found" error in IE8 caused by setting window.constructor
+		} else if ( prop !== "constructor" || a !== window ) {
 			a[prop] = b[prop];
 		}
 	}
@@ -1036,6 +1064,10 @@ QUnit.equiv = function () {
 			}
 		}
 	}
+
+	var getProto = Object.getPrototypeOf || function (obj) {
+		return obj.__proto__;
+	};
 
 	var callbacks = function () {
 
@@ -1126,7 +1158,13 @@ QUnit.equiv = function () {
 				// comparing constructors is more strict than using
 				// instanceof
 				if (a.constructor !== b.constructor) {
-					return false;
+					// Allow objects with no prototype to be equivalent to
+					// objects with Object as their constructor.
+					if (!((getProto(a) === null && getProto(b) === Object.prototype) ||
+						  (getProto(b) === null && getProto(a) === Object.prototype)))
+					{
+						return false;
+					}
 				}
 
 				// stack constructor before traversing properties
@@ -1267,7 +1305,12 @@ QUnit.jsDump = (function() {
 				type = "document";
 			} else if (obj.nodeType) {
 				type = "node";
-			} else if (typeof obj === "object" && typeof obj.length === "number" && obj.length >= 0) {
+			} else if (
+				// native arrays
+				toString.call( obj ) === "[object Array]" ||
+				// NodeList objects
+				( typeof obj.length === "number" && typeof obj.item !== "undefined" && ( obj.length ? obj.item(0) === obj[0] : ( obj.item( 0 ) === null && typeof obj[0] === "undefined" ) ) )
+			) {
 				type = "array";
 			} else {
 				type = typeof obj;
@@ -1449,6 +1492,9 @@ QUnit.diff = (function() {
 		}
 
 		for (var i in ns) {
+			if ( !hasOwn.call( ns, i ) ) {
+				continue;
+			}
 			if (ns[i].rows.length == 1 && typeof(os[i]) != "undefined" && os[i].rows.length == 1) {
 				n[ns[i].rows[0]] = {
 					text: n[ns[i].rows[0]],
