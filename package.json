@@ -8,12 +8,6 @@
     "email": "david@majda.cz",
     "url":   "http://majda.cz/"
   },
-  "files":           [
-    "CHANGELOG",
-    "README.md",
-    "VERSION",
-    "lib/codie.js"
-  ],
   "main":            "lib/codie",
   "repository":      {
     "type": "git",
