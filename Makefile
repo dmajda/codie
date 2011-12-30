@@ -4,5 +4,12 @@ test:
 hint:
 	jshint lib/codie.js test/codie-test.js test/run
 
-.PHONY: test hint
-.SILENT: test hint
+dist:
+	mkdir -p dist
+	cp -r lib LICENSE README.md VERSION package.json dist
+
+distclean:
+	rm -rf dist
+
+.PHONY: test hint dist distclean
+.SILENT: test hint dist distclean
