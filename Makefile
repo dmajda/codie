@@ -6,7 +6,7 @@ hint:
 
 dist:
 	mkdir -p dist
-	cp -r lib LICENSE README.md VERSION package.json dist
+	cp -r lib CHANGELOG LICENSE README.md VERSION package.json dist
 
 distclean:
 	rm -rf dist

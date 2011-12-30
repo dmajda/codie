@@ -1,0 +1,16 @@
+1.0.0 (2011-12-30)
+------------------
+
+Big Changes:
+
+* Adapted to Node.js 0.6.6+ (no longer supported in older versions).
+
+Small Changes:
+
+* Tests are not included in the npm package.
+* Improved README.md.
+
+0.9.0 (2011-09-29)
+------------------
+
+* Initial release.
