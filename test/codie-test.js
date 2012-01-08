@@ -304,6 +304,13 @@ test("#end", function() {
 });
 
 test("#block", function() {
+  var xs62  = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+      xs64  = xs62 + 'xx',
+      xs254 = xs64 + xs64 + xs64 + xs62,
+      xs256 = xs64 + xs64 + xs64 + xs64,
+      xs510 = xs256 + xs254,
+      xs766 = xs256 + xs510;
+
   /* Syntax */
 
   evals('#block 1+2',    '3');
@@ -326,6 +333,27 @@ test("#block", function() {
 
   evals('  #block "foo"',              '  foo');
   evals('  #block "foo\\nbar\\nbaz"',  '  foo\n  bar\n  baz');
+
+  /*
+   * V8 had a bug where |string.replace(/^/gm, ...)| didn't work properly for
+   * strings with length that was a multiple of 256 and where the character
+   * before the last one was a newline (maybe some other strings didn't work
+   * too). This bug was fixed in V8 3.7.0, but Node.js as of version 0.6.6 still
+   * uses unfixed version of V8 and so does Chrome as of version 16.
+   *
+   * Because |String.prototype.replace| was used in the described way in the
+   * implementation of the #block command, this command didn't work properly in
+   * certain cases. I worked around it by rewriting the implementation using
+   * |String.prototype.split| and |Array.prototype.join|. The following
+   * testcases serve as a regression test for the problem.
+   *
+   * When the earliest supported version of Node.js and Chrome both start using
+   * a fixed version of V8, the #block command implementation should be reverted
+   * back.
+   */
+  evals('  #block foo', "  " + xs254 + "\n  y", { foo: xs254 + "\ny" });
+  evals('  #block foo', "  " + xs510 + "\n  y", { foo: xs510 + "\ny" });
+  evals('  #block foo', "  " + xs766 + "\n  y", { foo: xs766 + "\ny" });
 
   /* Nesting */
 
