@@ -96,7 +96,7 @@ test("#if", function() {
   evals('  #if false\n    foo\n  #else\n    bar\n  #end', '  bar');
 
   /* Regression test: Tests correct indentation of multiple lines. */
-  evals('#if true\n  foo\n  bar\n  baz\n#else\n  qux\n#end', 'foo\nbar\nbaz');
+  evals('#if true\n  foo\n  bar\n  baz\n#else\n  qux\n#end',  'foo\nbar\nbaz');
   evals('#if false\n  foo\n#else\n  bar\n  baz\n  qux\n#end', 'bar\nbaz\nqux');
 
   /* Regression test: Tests that strings between #{...} are not unindented. */
@@ -232,7 +232,7 @@ test("#for", function() {
     '42\n84\n126\n43\n86\n129\n44\n88\n132'
   );
 
-  evals('#if true\n  foo\n  bar\n  baz\n#else\n  qux\n#end', 'foo\nbar\nbaz');
+  evals('#if true\n  foo\n  bar\n  baz\n#else\n  qux\n#end',  'foo\nbar\nbaz');
   evals('#if false\n  foo\n#else\n  bar\n  baz\n  qux\n#end', 'bar\nbaz\nqux');
 
   /* Regression test: Tests that strings between #{...} are not unindented. */
@@ -324,7 +324,7 @@ test("#block", function() {
 
   /* Indentation */
 
-  evals('  #block "foo"',  '  foo');
+  evals('  #block "foo"',              '  foo');
   evals('  #block "foo\\nbar\\nbaz"',  '  foo\n  bar\n  baz');
 
   /* Nesting */
