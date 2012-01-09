@@ -33,15 +33,13 @@ Installation
 
 ### Node.js
 
-You need to install [Node.js](http://nodejs.org/) first. You can then install Codie:
-
     $ npm install codie
 
 Do not install Codie globally (using the `-g` option), otherwise you won’t be able to use the API.
 
 ### Browser
 
-Download the `lib/codie.js` file and include it in your web page or application using the `<script>` tag.
+Download the `lib/codie.js` file.
 
 Usage
 -----
@@ -50,7 +48,7 @@ In Node.js, require the Codie module:
 
     var Codie = require("codie");
 
-In browser, include the Codie library in your web page or application using the `<script>` tag. Codie will be available via the `Codie` global object.
+In browser, include the Codie library in your web page or application using the `<script>` tag. Codie will be available in the `Codie` global object.
 
 Using a template is a two-step process. First you need to compile the template text into a template function. Then you need to call this function with data to be filled into the template. Compiling saves time when you use the same template multiple times.
 
@@ -147,7 +145,7 @@ Codie is designed to be extensible, so it’s easy to add new commands. All comm
 FAQ
 ---
 
-**Why did you choose "#" as a command and expression delimiter?**
+### Why did you choose "#" as a command and expression delimiter?
 
 I experimented with various means of delimiting. After a while I settled on line-oriented syntax with one-character delimiter. At that point, the "#" character won because it is easily recognizable, it’s not used in JavaScript, and commands prefixed by it resemble C preprocessor.
 
