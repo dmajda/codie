@@ -1,3 +1,12 @@
+1.0.1 (2012-01-09)
+------------------
+
+Small changes:
+
+* Fixed a problem with #block not working properly in certain versions of V8.
+* Code formatting fixes.
+* Improved README.md.
+
 1.0.0 (2011-12-30)
 ------------------
 
