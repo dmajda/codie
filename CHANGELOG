@@ -1,3 +1,12 @@
+1.1.0 (2012-04-16)
+------------------
+
+* Added |Codie.VERSION| property.
+* Added copyright comment.
+* Changed how the library is exported. Copy & paste inclusion of the
+  library into another code should be easier now.
+* Internal code improvements.
+
 1.0.1 (2012-01-09)
 ------------------
 
