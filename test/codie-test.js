@@ -1,13 +1,18 @@
-var evals = function(template, result, vars) {
-  strictEqual(Codie.template(template)(vars), result);
-};
+QUnit.extend(QUnit, {
+  evals: function(template, result, vars) {
+    QUnit.strictEqual(Codie.template(template)(vars), result);
+  },
 
-var raisesWithMessage = function(block, constructor, message) {
-  raises(
-    block,
-    function(e) { return e instanceof constructor && e.message === message; }
-  );
-};
+  raisesWithMessage: function(block, constructor, message) {
+    QUnit.raises(
+      block,
+      function(e) { return e instanceof constructor && e.message === message; }
+    );
+  }
+});
+
+var evals             = QUnit.evals,
+    raisesWithMessage = QUnit.raisesWithMessage;
 
 module("Codie.template");
 
