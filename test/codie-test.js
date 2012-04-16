@@ -1,5 +1,3 @@
-module("Codie.template");
-
 var evals = function(template, result, vars) {
   strictEqual(Codie.template(template)(vars), result);
 };
@@ -10,6 +8,8 @@ var raisesWithMessage = function(block, constructor, message) {
     function(e) { return e instanceof constructor && e.message === message; }
   );
 };
+
+module("Codie.template");
 
 test("simple strings", function() {
   evals('',                  '');
