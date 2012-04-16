@@ -1,6 +1,6 @@
 {
   "name":            "codie",
-  "version":         "1.0.1",
+  "version":         "1.1.0",
   "description":     "JavaScript template engine specialized in generating JavaScript code",
   "homepage":        "http://github.com/dmajda/codie",
   "author":          {
