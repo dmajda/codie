@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/dmajda/codie.png)](http://travis-ci.org/dmajda/codie)
 Codie
 =====
 
